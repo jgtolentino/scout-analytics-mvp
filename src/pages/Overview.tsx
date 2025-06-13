@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { GlobalFilters } from '@/components/filters/GlobalFilters';
 import { ClickableKpiCard } from '@/components/dashboard/ClickableKpiCard';
 import { Sparkline } from '@/components/charts/Sparkline';
 import { TopMovers } from '@/components/charts/TopMovers';
+import { RecommendationsPanel } from '@/components/ai/RecommendationsPanel';
 import { useMetrics } from '@/hooks/useRealData';
 import { Loader2, DollarSign, ShoppingCart, Users, TrendingUp } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
@@ -49,8 +49,6 @@ export function Overview() {
         </div>
       </div>
       
-      <GlobalFilters />
-      
       {/* L0: Core KPIs - Maximum 4 for clean overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <ClickableKpiCard
@@ -90,8 +88,8 @@ export function Overview() {
         />
       </div>
 
-      {/* L0: Essential Charts - Only sparkline + top movers */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* L0: Essential Charts + AI Recommendations */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Sparkline
           data={metrics.revenueTrendData}
           title="Revenue Trend"
@@ -104,6 +102,7 @@ export function Overview() {
           title="Top Performing Products"
           onItemClick={(item) => navigate(`/product-mix?category=${encodeURIComponent(item.category)}`)}
         />
+        <RecommendationsPanel className="lg:row-span-1" />
       </div>
 
       {/* Quick Action Hint */}

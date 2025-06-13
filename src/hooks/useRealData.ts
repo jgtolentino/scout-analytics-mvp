@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { useFilterStore } from '@/stores/filterStore';
-import { supabase } from '@/lib/supabase';
+import { useFilterStore } from '@/state/useFilterStore';
+import { supabase } from '@/lib/supabaseClient';
 import { DashboardMetrics, ChartData } from '@/types';
 
 // Helper function to format dates for SQL
@@ -35,8 +35,8 @@ export const useMetrics = () => {
             )
           )
         `, { count: 'exact' })
-        .gte('created_at', formatDateForSQL(filters.dateRange[0]))
-        .lte('created_at', formatDateForSQL(filters.dateRange[1]))
+        .gte('created_at', formatDateForSQL(filters.dateRange.from!))
+        .lte('created_at', formatDateForSQL(filters.dateRange.to!))
         .limit(50000); // Explicit high limit to ensure we get all 18k+ records
 
       if (error) throw error;
@@ -55,9 +55,9 @@ export const useMetrics = () => {
         );
       }
 
-      if (filters.locations?.length > 0) {
+      if (filters.barangays?.length > 0) {
         filteredTransactions = filteredTransactions.filter(t => 
-          filters.locations.includes(t.store_location)
+          filters.barangays.includes(t.store_location)
         );
       }
 
@@ -83,8 +83,8 @@ export const useMetrics = () => {
       });
 
       const revenueTrendData: ChartData[] = [];
-      const startDate = new Date(filters.dateRange[0]);
-      const endDate = new Date(filters.dateRange[1]);
+      const startDate = new Date(filters.dateRange.from!);
+      const endDate = new Date(filters.dateRange.to!);
       const currentDate = new Date(startDate);
 
       while (currentDate <= endDate) {
@@ -160,8 +160,8 @@ export const useTransactionTrends = () => {
             )
           )
         `, { count: 'exact' })
-        .gte('created_at', formatDateForSQL(filters.dateRange[0]))
-        .lte('created_at', formatDateForSQL(filters.dateRange[1]))
+        .gte('created_at', formatDateForSQL(filters.dateRange.from!))
+        .lte('created_at', formatDateForSQL(filters.dateRange.to!))
         .limit(50000) // Ensure we get all records
         .order('created_at');
 
@@ -181,9 +181,9 @@ export const useTransactionTrends = () => {
         );
       }
 
-      if (filters.locations?.length > 0) {
+      if (filters.barangays?.length > 0) {
         filteredTransactions = filteredTransactions.filter(t => 
-          filters.locations.includes(t.store_location)
+          filters.barangays.includes(t.store_location)
         );
       }
 
@@ -203,8 +203,8 @@ export const useTransactionTrends = () => {
       });
 
       const dailyVolume: ChartData[] = [];
-      const startDate = new Date(filters.dateRange[0]);
-      const endDate = new Date(filters.dateRange[1]);
+      const startDate = new Date(filters.dateRange.from!);
+      const endDate = new Date(filters.dateRange.to!);
       const currentDate = new Date(startDate);
 
       while (currentDate <= endDate) {
@@ -285,8 +285,8 @@ export const useProductMix = () => {
             )
           )
         `, { count: 'exact' })
-        .gte('created_at', formatDateForSQL(filters.dateRange[0]))
-        .lte('created_at', formatDateForSQL(filters.dateRange[1]))
+        .gte('created_at', formatDateForSQL(filters.dateRange.from!))
+        .lte('created_at', formatDateForSQL(filters.dateRange.to!))
         .limit(50000); // Ensure we get all records
 
       if (error) throw error;
@@ -305,9 +305,9 @@ export const useProductMix = () => {
         );
       }
 
-      if (filters.locations?.length > 0) {
+      if (filters.barangays?.length > 0) {
         filteredTransactions = filteredTransactions.filter(t => 
-          filters.locations.includes(t.store_location)
+          filters.barangays.includes(t.store_location)
         );
       }
 
@@ -405,8 +405,8 @@ export const useConsumerInsights = () => {
             )
           )
         `, { count: 'exact' })
-        .gte('created_at', formatDateForSQL(filters.dateRange[0]))
-        .lte('created_at', formatDateForSQL(filters.dateRange[1]))
+        .gte('created_at', formatDateForSQL(filters.dateRange.from!))
+        .lte('created_at', formatDateForSQL(filters.dateRange.to!))
         .limit(50000); // Ensure we get all records
 
       if (error) throw error;
@@ -425,9 +425,9 @@ export const useConsumerInsights = () => {
         );
       }
 
-      if (filters.locations?.length > 0) {
+      if (filters.barangays?.length > 0) {
         filteredTransactions = filteredTransactions.filter(t => 
-          filters.locations.includes(t.store_location)
+          filters.barangays.includes(t.store_location)
         );
       }
 

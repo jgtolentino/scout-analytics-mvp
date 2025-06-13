@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useFilterStore } from '../stores/filterStore';
+import { useFilterStore } from '@/state/useFilterStore';
 
 /**
  * Hook to ensure filter state synchronization with URL across page navigation
