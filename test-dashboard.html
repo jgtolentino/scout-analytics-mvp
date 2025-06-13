@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scout Analytics - Live Data Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .card { border: 1px solid #ddd; padding: 20px; margin: 10px 0; border-radius: 8px; }
+        .metric { font-size: 24px; font-weight: bold; color: #2563eb; }
+        .loading { color: #666; }
+        .error { color: #dc2626; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Scout Analytics - Live Data Connection Test</h1>
+    
+    <div class="card">
+        <h2>Connection Status</h2>
+        <div id="connection-status" class="loading">Testing connection...</div>
+    </div>
+    
+    <div class="card">
+        <h2>📊 Real-Time Metrics from Your 18K Transactions</h2>
+        <div id="metrics" class="loading">Loading metrics...</div>
+    </div>
+    
+    <div class="card">
+        <h2>🏪 Store Locations</h2>
+        <div id="stores" class="loading">Loading stores...</div>
+    </div>
+    
+    <div class="card">
+        <h2>🛍️ Product Categories</h2>
+        <div id="categories" class="loading">Loading categories...</div>
+    </div>
+    
+    <div class="card">
+        <h2>💳 Payment Methods</h2>
+        <div id="payment-methods" class="loading">Loading payment data...</div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://lcoxtanyckjzyxxcsjzz.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxjb3h0YW55Y2tqenl4eGNzanp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzNDUzMjcsImV4cCI6MjA2MzkyMTMyN30.W2JgvZdXubvWpKCNZ7TfjLiKANZO1Hlb164fBEKH2dA';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function testConnection() {
+            try {
+                document.getElementById('connection-status').innerHTML = '✅ Connected to Supabase successfully!';
+                
+                // Get transaction metrics
+                const { data: transactions, error: transError } = await supabase
+                    .from('transactions')
+                    .select('total_amount, customer_age, customer_gender, payment_method, created_at')
+                    .limit(1000);
+                
+                if (transError) throw transError;
+                
+                const totalRevenue = transactions.reduce((sum, t) => sum + (t.total_amount || 0), 0);
+                const avgAge = transactions.reduce((sum, t) => sum + (t.customer_age || 0), 0) / transactions.length;
+                const maleCount = transactions.filter(t => t.customer_gender === 'Male').length;
+                const femaleCount = transactions.filter(t => t.customer_gender === 'Female').length;
+                
+                document.getElementById('metrics').innerHTML = `
+                    <div class="metric">₱${totalRevenue.toLocaleString()} Total Revenue</div>
+                    <div>${transactions.length.toLocaleString()} transactions analyzed</div>
+                    <div>Average customer age: ${Math.round(avgAge)} years</div>
+                    <div>Gender split: ${Math.round(maleCount/transactions.length*100)}% Male, ${Math.round(femaleCount/transactions.length*100)}% Female</div>
+                `;
+                
+                // Get stores
+                const { data: stores } = await supabase
+                    .from('stores')
+                    .select('name, location');
+                
+                document.getElementById('stores').innerHTML = stores?.map(s => 
+                    `<div>📍 ${s.name}</div>`
+                ).join('') || 'No stores found';
+                
+                // Get product categories
+                const { data: products } = await supabase
+                    .from('products')
+                    .select('category');
+                
+                const categories = [...new Set(products?.map(p => p.category))];
+                document.getElementById('categories').innerHTML = categories.map(c => 
+                    `<div>🏷️ ${c}</div>`
+                ).join('');
+                
+                // Payment methods analysis
+                const paymentCount = {};
+                transactions.forEach(t => {
+                    const method = t.payment_method || 'unknown';
+                    paymentCount[method] = (paymentCount[method] || 0) + 1;
+                });
+                
+                document.getElementById('payment-methods').innerHTML = Object.entries(paymentCount)
+                    .map(([method, count]) => 
+                        `<div>💳 ${method}: ${count} transactions (${Math.round(count/transactions.length*100)}%)</div>`
+                    ).join('');
+                
+            } catch (error) {
+                document.getElementById('connection-status').innerHTML = `❌ Connection failed: ${error.message}`;
+                document.getElementById('connection-status').className = 'error';
+            }
+        }
+
+        testConnection();
+    </script>
+</body>
+</html>
