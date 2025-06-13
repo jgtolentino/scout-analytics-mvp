@@ -15,8 +15,8 @@ export const useMetrics = () => {
   return useQuery({
     queryKey: ['metrics', filters],
     queryFn: async (): Promise<DashboardMetrics> => {
-      // Get transactions with related data using correct schema
-      const { data: transactions, error } = await supabase
+      // Get ALL transactions with related data - NO LIMITS for full dataset
+      const { data: transactions, error, count } = await supabase
         .from('transactions')
         .select(`
           id,
@@ -34,12 +34,16 @@ export const useMetrics = () => {
               brands!inner(name)
             )
           )
-        `)
+        `, { count: 'exact' })
         .gte('created_at', formatDateForSQL(filters.dateRange[0]))
-        .lte('created_at', formatDateForSQL(filters.dateRange[1]));
+        .lte('created_at', formatDateForSQL(filters.dateRange[1]))
+        .limit(50000); // Explicit high limit to ensure we get all 18k+ records
 
       if (error) throw error;
 
+      // Debug logging to verify we're getting full dataset
+      console.log(`🔍 Query Results: ${transactions?.length || 0} transactions fetched, total count: ${count}`);
+      
       // Apply filters
       let filteredTransactions = transactions || [];
       
@@ -139,7 +143,7 @@ export const useTransactionTrends = () => {
   return useQuery({
     queryKey: ['transaction-trends', filters],
     queryFn: async () => {
-      const { data: transactions, error } = await supabase
+      const { data: transactions, error, count } = await supabase
         .from('transactions')
         .select(`
           id,
@@ -155,12 +159,16 @@ export const useTransactionTrends = () => {
               brands!inner(name)
             )
           )
-        `)
+        `, { count: 'exact' })
         .gte('created_at', formatDateForSQL(filters.dateRange[0]))
         .lte('created_at', formatDateForSQL(filters.dateRange[1]))
+        .limit(50000) // Ensure we get all records
         .order('created_at');
 
       if (error) throw error;
+
+      // Debug logging for transaction trends
+      console.log(`📈 Transaction Trends: ${transactions?.length || 0} transactions fetched, total count: ${count}`);
 
       // Apply filters
       let filteredTransactions = transactions || [];
@@ -260,7 +268,7 @@ export const useProductMix = () => {
   return useQuery({
     queryKey: ['product-mix', filters],
     queryFn: async () => {
-      const { data: transactions, error } = await supabase
+      const { data: transactions, error, count } = await supabase
         .from('transactions')
         .select(`
           id,
@@ -276,11 +284,15 @@ export const useProductMix = () => {
               brands!inner(name)
             )
           )
-        `)
+        `, { count: 'exact' })
         .gte('created_at', formatDateForSQL(filters.dateRange[0]))
-        .lte('created_at', formatDateForSQL(filters.dateRange[1]));
+        .lte('created_at', formatDateForSQL(filters.dateRange[1]))
+        .limit(50000); // Ensure we get all records
 
       if (error) throw error;
+
+      // Debug logging for product mix
+      console.log(`🛍️ Product Mix: ${transactions?.length || 0} transactions fetched, total count: ${count}`);
 
       // Apply filters
       let filteredTransactions = transactions || [];
@@ -374,7 +386,7 @@ export const useConsumerInsights = () => {
   return useQuery({
     queryKey: ['consumer-insights', filters],
     queryFn: async () => {
-      const { data: transactions, error } = await supabase
+      const { data: transactions, error, count } = await supabase
         .from('transactions')
         .select(`
           id,
@@ -392,11 +404,15 @@ export const useConsumerInsights = () => {
               brands!inner(name)
             )
           )
-        `)
+        `, { count: 'exact' })
         .gte('created_at', formatDateForSQL(filters.dateRange[0]))
-        .lte('created_at', formatDateForSQL(filters.dateRange[1]));
+        .lte('created_at', formatDateForSQL(filters.dateRange[1]))
+        .limit(50000); // Ensure we get all records
 
       if (error) throw error;
+
+      // Debug logging for consumer insights
+      console.log(`👥 Consumer Insights: ${transactions?.length || 0} transactions fetched, total count: ${count}`);
 
       // Apply filters
       let filteredTransactions = transactions || [];
