@@ -1,4 +1,4 @@
-import{r as i}from"./react-vendor-clnEbvOI.js";var m={exports:{}},p={};/**
+import{r as i}from"./react-vendor-B-CDgs5_.js";var m={exports:{}},p={};/**
  * @license React
  * react-jsx-runtime.production.min.js
  *

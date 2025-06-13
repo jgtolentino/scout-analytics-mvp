@@ -1,13 +1,15 @@
+import { useNavigate } from 'react-router-dom';
 import { GlobalFilters } from '@/components/filters/GlobalFilters';
-import { MetricCard } from '@/components/dashboard/MetricCard';
-import { LineChart } from '@/components/charts/LineChart';
-import { BarChart } from '@/components/charts/BarChart';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ClickableKpiCard } from '@/components/dashboard/ClickableKpiCard';
+import { Sparkline } from '@/components/charts/Sparkline';
+import { TopMovers } from '@/components/charts/TopMovers';
 import { useMetrics } from '@/hooks/useRealData';
-import { Loader2 } from 'lucide-react';
+import { Loader2, DollarSign, ShoppingCart, Users, TrendingUp } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 export function Overview() {
   const { data: metrics, isLoading, error } = useMetrics();
+  const navigate = useNavigate();
   
   if (isLoading) {
     return (
@@ -27,151 +29,88 @@ export function Overview() {
       </div>
     );
   }
+
+  // Mock top movers data (would come from real data in production)
+  const topMovers = [
+    { name: "Nestle Milo", value: 2850000, change: 12.5, category: "Beverages" },
+    { name: "Coca-Cola Classic", value: 2100000, change: 8.3, category: "Beverages" },
+    { name: "Lucky Me Instant", value: 1750000, change: -2.1, category: "Food" },
+    { name: "Unilever Dove", value: 1650000, change: 15.7, category: "Personal Care" },
+    { name: "San Miguel Beer", value: 1200000, change: 6.4, category: "Beverages" }
+  ];
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Overview Dashboard</h1>
-        <div className="text-sm text-muted-foreground">
-          Real-time retail analytics
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Executive Overview</h1>
+          <p className="text-sm text-gray-600 mt-1">Real-time retail analytics dashboard</p>
         </div>
       </div>
       
       <GlobalFilters />
       
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
+      {/* L0: Core KPIs - Maximum 4 for clean overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <ClickableKpiCard
           title="Total Revenue"
           value={metrics.revenue}
           format="currency"
           trend={metrics.revenueTrend}
           subtitle="Last 30 days"
+          icon={<DollarSign className="h-5 w-5" />}
+          onClick={() => navigate('/transaction-trends')}
         />
-        <MetricCard
-          title="Total Transactions"
+        <ClickableKpiCard
+          title="Transactions"
           value={metrics.transactions}
           format="number"
           trend={metrics.transactionsTrend}
-          subtitle="Completed orders"
+          subtitle="Total count"
+          icon={<ShoppingCart className="h-5 w-5" />}
+          onClick={() => navigate('/transaction-trends')}
         />
-        <MetricCard
-          title="Avg Basket Size"
+        <ClickableKpiCard
+          title="Avg Basket"
           value={metrics.avgBasketSize}
           format="currency"
           trend={metrics.basketTrend}
           subtitle="Per transaction"
+          icon={<TrendingUp className="h-5 w-5" />}
         />
-        <MetricCard
+        <ClickableKpiCard
           title="Active Customers"
           value={metrics.activeCustomers}
           format="number"
           trend={metrics.customersTrend}
           subtitle="Unique buyers"
+          icon={<Users className="h-5 w-5" />}
+          onClick={() => navigate('/consumer-insights')}
         />
       </div>
-      
-      {/* Charts */}
+
+      {/* L0: Essential Charts - Only sparkline + top movers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <LineChart 
-              data={metrics.revenueTrendData} 
-              formatValue="currency"
-              color="#3b82f6"
-              height={300}
-            />
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Products by Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BarChart 
-              data={metrics.topProducts} 
-              formatValue="currency"
-              color="#10b981"
-              height={300}
-              layout="vertical"
-            />
-          </CardContent>
-        </Card>
+        <Sparkline
+          data={metrics.revenueTrendData}
+          title="Revenue Trend"
+          value={formatCurrency(metrics.revenue)}
+          trend={metrics.revenueTrend}
+          onClick={() => navigate('/transaction-trends')}
+        />
+        <TopMovers
+          data={topMovers}
+          title="Top Performing Products"
+          onItemClick={(item) => navigate(`/product-mix?category=${encodeURIComponent(item.category)}`)}
+        />
       </div>
-      
-      {/* Additional Insights */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Revenue Growth</span>
-              <span className={`text-sm font-medium ${metrics.revenueTrend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {metrics.revenueTrend >= 0 ? '+' : ''}{metrics.revenueTrend.toFixed(1)}%
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Transaction Growth</span>
-              <span className={`text-sm font-medium ${metrics.transactionsTrend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {metrics.transactionsTrend >= 0 ? '+' : ''}{metrics.transactionsTrend.toFixed(1)}%
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Customer Growth</span>
-              <span className={`text-sm font-medium ${metrics.customersTrend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {metrics.customersTrend >= 0 ? '+' : ''}{metrics.customersTrend.toFixed(1)}%
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Key Metrics</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Avg. Order Value</span>
-              <span className="text-sm font-medium">₱{metrics.avgBasketSize.toFixed(0)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Orders per Customer</span>
-              <span className="text-sm font-medium">{(metrics.transactions / metrics.activeCustomers).toFixed(1)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Revenue per Customer</span>
-              <span className="text-sm font-medium">₱{(metrics.revenue / metrics.activeCustomers).toFixed(0)}</span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Today's Highlights</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-sm">
-              <div className="font-medium text-green-600">Top Performing Product</div>
-              <div className="text-muted-foreground">{metrics.topProducts[0]?.name}</div>
-            </div>
-            <div className="text-sm">
-              <div className="font-medium">Daily Revenue Target</div>
-              <div className="text-muted-foreground">
-                {Math.round((metrics.revenue / metrics.revenueTrendData.length) / (metrics.revenue / metrics.revenueTrendData.length) * 100)}% achieved
-              </div>
-            </div>
-            <div className="text-sm">
-              <div className="font-medium">Active Promotions</div>
-              <div className="text-muted-foreground">3 campaigns running</div>
-            </div>
-          </CardContent>
-        </Card>
+
+      {/* Quick Action Hint */}
+      <div className="text-center py-8">
+        <p className="text-sm text-gray-500">
+          💡 Click any metric or chart above to dive deeper into the data
+        </p>
       </div>
     </div>
   );
