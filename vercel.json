@@ -4,10 +4,5 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
-  ],
-  "functions": {
-    "src/api/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  ]
 }
