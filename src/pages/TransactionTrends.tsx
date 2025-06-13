@@ -2,16 +2,27 @@ import { GlobalFilters } from '@/components/filters/GlobalFilters';
 import { LineChart } from '@/components/charts/LineChart';
 import { BarChart } from '@/components/charts/BarChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useTransactionTrends } from '@/hooks/useMockData';
+import { useTransactionTrends } from '@/hooks/useRealData';
 import { Loader2, TrendingUp, Clock, DollarSign } from 'lucide-react';
 
 export function TransactionTrends() {
-  const { data, isLoading } = useTransactionTrends();
+  const { data, isLoading, error } = useTransactionTrends();
   
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600">Error loading data</p>
+          <p className="text-sm text-gray-500">Please try again later</p>
+        </div>
       </div>
     );
   }

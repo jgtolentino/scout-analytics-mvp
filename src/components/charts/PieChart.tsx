@@ -14,6 +14,7 @@ interface PieChartProps {
   formatValue?: 'currency' | 'number' | 'percentage';
   showLegend?: boolean;
   colors?: string[];
+  innerRadius?: number;
 }
 
 const DEFAULT_COLORS = [
@@ -27,7 +28,8 @@ export function PieChart({
   height = 300,
   formatValue = 'number',
   showLegend = true,
-  colors = DEFAULT_COLORS
+  colors = DEFAULT_COLORS,
+  innerRadius = 60
 }: PieChartProps) {
   const formatTooltipValue = (value: any) => {
     if (typeof value !== 'number') return value;
@@ -59,6 +61,7 @@ export function PieChart({
           labelLine={false}
           label={formatLabelValue}
           outerRadius={80}
+          innerRadius={innerRadius}
           fill="#8884d8"
           dataKey={dataKey}
         >

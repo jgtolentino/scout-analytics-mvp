@@ -2,16 +2,27 @@ import { GlobalFilters } from '@/components/filters/GlobalFilters';
 import { BarChart } from '@/components/charts/BarChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useConsumerInsights } from '@/hooks/useMockData';
+import { useConsumerInsights } from '@/hooks/useRealData';
 import { Loader2, Users, Clock, CreditCard, ShoppingCart } from 'lucide-react';
 
 export function ConsumerInsights() {
-  const { data, isLoading } = useConsumerInsights();
+  const { data, isLoading, error } = useConsumerInsights();
   
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600">Error loading data</p>
+          <p className="text-sm text-gray-500">Please try again later</p>
+        </div>
       </div>
     );
   }

@@ -3,16 +3,27 @@ import { MetricCard } from '@/components/dashboard/MetricCard';
 import { LineChart } from '@/components/charts/LineChart';
 import { BarChart } from '@/components/charts/BarChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useMetrics } from '@/hooks/useMockData';
+import { useMetrics } from '@/hooks/useRealData';
 import { Loader2 } from 'lucide-react';
 
 export function Overview() {
-  const { data: metrics, isLoading } = useMetrics();
+  const { data: metrics, isLoading, error } = useMetrics();
   
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !metrics) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600">Error loading data</p>
+          <p className="text-sm text-gray-500">Please try again later</p>
+        </div>
       </div>
     );
   }

@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
 import { useFilterStore } from '@/stores/filterStore';
+import { useSyncFilters } from '@/hooks/useSyncFilters';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { Button } from '@/components/ui/button';
@@ -58,13 +58,10 @@ export function GlobalFilters() {
     setLocations,
     setCategories,
     resetFilters,
-    syncWithURL,
   } = useFilterStore();
   
-  // Sync with URL on mount
-  useEffect(() => {
-    syncWithURL();
-  }, [syncWithURL]);
+  // Use the enhanced sync hook for proper filter persistence
+  useSyncFilters();
   
   return (
     <Card className="p-4 mb-6 bg-white shadow-sm">

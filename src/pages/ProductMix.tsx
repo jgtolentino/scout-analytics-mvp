@@ -2,16 +2,27 @@ import { GlobalFilters } from '@/components/filters/GlobalFilters';
 import { BarChart } from '@/components/charts/BarChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useProductMix } from '@/hooks/useMockData';
+import { useProductMix } from '@/hooks/useRealData';
 import { Loader2, Package, TrendingUp, Star, Target } from 'lucide-react';
 
 export function ProductMix() {
-  const { data, isLoading } = useProductMix();
+  const { data, isLoading, error } = useProductMix();
   
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600">Error loading data</p>
+          <p className="text-sm text-gray-500">Please try again later</p>
+        </div>
       </div>
     );
   }
