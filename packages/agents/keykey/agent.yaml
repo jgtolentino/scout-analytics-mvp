@@ -1,0 +1,4 @@
+id: keykey
+entry: index.ts
+cross_repo: true
+description: Secret manager agent

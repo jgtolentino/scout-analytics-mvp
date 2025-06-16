@@ -1,0 +1,4 @@
+id: repo
+entry: index.ts
+cross_repo: true
+description: Git-ops agent

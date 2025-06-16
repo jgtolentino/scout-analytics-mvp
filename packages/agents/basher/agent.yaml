@@ -1,0 +1,4 @@
+id: basher
+entry: index.ts
+privileges: bash
+description: Secure shell executor

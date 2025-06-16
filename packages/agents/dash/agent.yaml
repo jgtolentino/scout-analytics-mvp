@@ -1,0 +1,7 @@
+id: dash
+name: Dash
+entry: index.ts
+description: Reverse-engineer & QA agent (stub)
+trusted_agents: [repo, caca]
+modules: [reverse_ui, qa_runner]
+permissions: [read: ./, write: ./reports]

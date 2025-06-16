@@ -1,0 +1,4 @@
+id: claude
+entry: index.ts
+cwd_lock: true
+description: AI dev assistant (sandboxed)

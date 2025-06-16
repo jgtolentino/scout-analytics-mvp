@@ -1,0 +1,37 @@
+name: minimal-ci
+
+on: [push, pull_request]
+
+jobs:
+  lock-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install yq
+        run: sudo apt-get update && sudo apt-get install -y yq
+      - run: .github/scripts/verify-locks.sh
+
+  unit-build:
+    needs: lock-verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test --if-present
+
+  deploy-preview:
+    needs: unit-build
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}

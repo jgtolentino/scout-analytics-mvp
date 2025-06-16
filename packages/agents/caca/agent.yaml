@@ -1,0 +1,4 @@
+id: caca
+entry: index.ts
+role: qa
+description: QA automation agent
