@@ -1,0 +1,113 @@
+{
+  "timestamp": "2025-06-14T23:46:08.109Z",
+  "summary": {
+    "totalTests": 1,
+    "passed": 0,
+    "failed": 1,
+    "errors": 3
+  },
+  "metrics": [
+    {
+      "name": "Overview Page",
+      "url": "https://scout-analytics-mvp.vercel.app/",
+      "timestamp": "2025-06-14T23:45:30.352Z",
+      "timing": {
+        "domContentLoaded": 0,
+        "loadComplete": 0,
+        "firstPaint": 792,
+        "firstContentfulPaint": 1000,
+        "totalLoadTime": null,
+        "scriptExecutionTime": 2373
+      },
+      "elements": {
+        "hasKPICards": true,
+        "hasCharts": false,
+        "hasNavigation": true,
+        "hasFilters": false,
+        "allCriticalElementsPresent": false
+      },
+      "network": {
+        "requestCount": 10,
+        "requests": [
+          {
+            "url": "https://scout-analytics-mvp.vercel.app/",
+            "method": "GET",
+            "startTime": 1749944727982
+          },
+          {
+            "url": "https://scout-analytics-mvp.vercel.app/assets/index-DMWm8obI.js",
+            "method": "GET",
+            "startTime": 1749944728426
+          },
+          {
+            "url": "https://scout-analytics-mvp.vercel.app/assets/react-vendor-B-CDgs5_.js",
+            "method": "GET",
+            "startTime": 1749944728426
+          },
+          {
+            "url": "https://scout-analytics-mvp.vercel.app/assets/ui-vendor-BqE4lOUt.js",
+            "method": "GET",
+            "startTime": 1749944728426
+          },
+          {
+            "url": "https://scout-analytics-mvp.vercel.app/assets/chart-vendor-DM6pHQ4V.js",
+            "method": "GET",
+            "startTime": 1749944728426
+          },
+          {
+            "url": "https://scout-analytics-mvp.vercel.app/assets/index-1PGs6VYC.css",
+            "method": "GET",
+            "startTime": 1749944728426
+          },
+          {
+            "url": "https://lcoxtanyckjzyxxcsjzz.supabase.co/rest/v1/transactions?select=id%2Ctotal_amount%2Ccreated_at%2Ccustomer_age%2Ccustomer_gender%2Cstore_location%2Ctransaction_items%21inner%28quantity%2Cprice%2Cproducts%21inner%28name%2Ccategory%2Cbrands%21inner%28name%29%29%29&created_at=gte.2025-05-15&created_at=lte.2025-06-14&limit=50000",
+            "method": "GET",
+            "startTime": 1749944728879
+          },
+          {
+            "url": "https://lcoxtanyckjzyxxcsjzz.supabase.co/rest/v1/transactions?select=store_location&limit=25000",
+            "method": "GET",
+            "startTime": 1749944728879
+          },
+          {
+            "url": "https://lcoxtanyckjzyxxcsjzz.supabase.co/rest/v1/products?select=category&limit=5000",
+            "method": "GET",
+            "startTime": 1749944729611
+          },
+          {
+            "url": "https://lcoxtanyckjzyxxcsjzz.supabase.co/rest/v1/brands?select=name&limit=1000",
+            "method": "GET",
+            "startTime": 1749944729732
+          }
+        ]
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "success": false
+    }
+  ],
+  "errors": [
+    {
+      "name": "Transaction Trends",
+      "error": "page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"dashboard-loaded\"], .recharts-wrapper, .grid') to be visible\u001b[22m\n",
+      "url": "https://scout-analytics-mvp.vercel.app/transaction-trends"
+    },
+    {
+      "name": "Product Mix",
+      "error": "page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"dashboard-loaded\"], .recharts-wrapper, .grid') to be visible\u001b[22m\n",
+      "url": "https://scout-analytics-mvp.vercel.app/product-mix"
+    },
+    {
+      "name": "Consumer Insights",
+      "error": "page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"dashboard-loaded\"], .recharts-wrapper, .grid') to be visible\u001b[22m\n",
+      "url": "https://scout-analytics-mvp.vercel.app/consumer-insights"
+    }
+  ],
+  "recommendations": [
+    "🐛 Overview Page: 3 console errors detected",
+    "🎯 Overview Page: Missing critical UI elements"
+  ]
+}
