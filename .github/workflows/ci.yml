@@ -42,7 +42,7 @@ jobs:
   dash-qc:
     needs: deploy-preview
     runs-on: ubuntu-latest
-    continue-on-error: true       # flip to false in Phase 3
+    continue-on-error: false
     env:
       TARGET_URL: ${{ needs.deploy-preview.outputs.preview-url }}
     steps:
