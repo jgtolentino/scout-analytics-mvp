@@ -188,7 +188,7 @@ export const GlobalFilterBar: React.FC<GlobalFilterBarProps> = ({
           >
             <Calendar className="w-4 h-4" />
             <span>
-              {dateRange.from && dateRange.to
+              {dateRange.from && dateRange.to && dateRange.from instanceof Date && dateRange.to instanceof Date
                 ? `${dateRange.from.toLocaleDateString()} - ${dateRange.to.toLocaleDateString()}`
                 : 'Date Range'
               }

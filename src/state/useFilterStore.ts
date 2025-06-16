@@ -164,7 +164,18 @@ export const useFilterStore = create<FilterState & FilterActions>()(
           stores: state.stores,
           searchTerm: state.searchTerm,
           quickFilters: state.quickFilters
-        })
+        }),
+        // Convert date strings back to Date objects on rehydration
+        onRehydrateStorage: () => (state) => {
+          if (state && state.dateRange) {
+            if (state.dateRange.from && typeof state.dateRange.from === 'string') {
+              state.dateRange.from = new Date(state.dateRange.from);
+            }
+            if (state.dateRange.to && typeof state.dateRange.to === 'string') {
+              state.dateRange.to = new Date(state.dateRange.to);
+            }
+          }
+        }
       }
     ),
     { name: 'filter-store' }
