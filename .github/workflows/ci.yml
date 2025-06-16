@@ -28,10 +28,28 @@ jobs:
     needs: unit-build
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    outputs:
+      preview-url: ${{ steps.deploy.outputs.preview-url }}
     steps:
       - uses: actions/checkout@v4
       - uses: amondnet/vercel-action@v25
+        id: deploy
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  dash-qc:
+    needs: deploy-preview
+    runs-on: ubuntu-latest
+    continue-on-error: true       # flip to false in Phase 3
+    env:
+      TARGET_URL: ${{ needs.deploy-preview.outputs.preview-url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 18, cache: npm }
+      - run: npm ci
+      - run: npx dash-test qa --target $TARGET_URL --yaml docs/end_state_v3.3.yaml
+      - uses: actions/upload-artifact@v4
+        with: { name: dash-report, path: dash-report }
