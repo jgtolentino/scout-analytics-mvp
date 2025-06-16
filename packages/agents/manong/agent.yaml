@@ -5,3 +5,4 @@ description: Manual-to-CLI synthesizer (stub)
 trusted_agents: [keykey, basher]
 modules: [cli_translator]
 permissions: [read: ./, write: ./scripts, exec: bash]
+delegate_watch_to: dash       # forward file events

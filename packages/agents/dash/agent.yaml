@@ -5,3 +5,6 @@ description: Reverse-engineer & QA agent (stub)
 trusted_agents: [repo, caca]
 modules: [reverse_ui, qa_runner]
 permissions: [read: ./, write: ./reports]
+watch:
+  paths: ["design_dropbox/**", "schema_dumps/**"]
+  on_event: reverse_ui        # call module
