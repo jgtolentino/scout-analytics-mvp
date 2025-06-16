@@ -1,0 +1,82 @@
+version: 3.3.0
+baseline: 2.0.0          # Clean restart point
+project: scout-analytics-mvp
+
+deployment:
+  target: vercel
+  environments:
+    prod_url: https://scout-mvp.vercel.app
+    preview_prefix: "https://scout-mvp-git-{branch}.vercel.app"
+  ci_pipeline: github_actions/ci.yml   # hardened 10-stage pipeline
+
+databases:
+  - id: supabase
+    type: postgres
+    role: primary
+    url_secret: SUPABASE_URL
+  - id: azsql
+    type: sqlserver
+    role: replica
+    url_secret: AZURE_SQL_URL
+
+feature_flags:
+  CES_CHAT:  true
+  BRAND_BOT: true
+  DUAL_DB:   true
+
+agents:
+  repo:
+    path: packages/agents/repo
+    cross_repo: true
+  keykey:
+    path: packages/agents/keykey
+    cross_repo: true
+  basher:
+    path: packages/agents/basher
+    privileges: bash
+  caca:
+    path: packages/agents/caca
+    role: qa
+  claude:
+    path: packages/agents/claude
+    cwd_lock: true
+
+dashboards:
+  pages:
+    - id: overview
+      route: /
+      components: [kpi_cards, trend_line, category_perf, ai_insight_panel]
+    - id: trends
+      route: /trends
+      components: [temporal_patterns, peak_hour_chart, region_breakdown]
+    - id: product_mix
+      route: /products
+      components: [brand_chart, sku_table, sankey_flow]
+    - id: consumers
+      route: /consumers
+      components: [demographics_heatmap, repeat_rate_card]
+    - id: ces_chat
+      route: /ces
+      components: [chat_panel]
+
+ai_services:
+  brand_bot:
+    provider: openai
+    model: gpt-4o
+    endpoint: /api/brandbot
+  ces_chat:
+    provider: openai
+    model: gpt-4o
+    endpoint: /api/ces/chat
+
+quality_gates:
+  eslint: true
+  prettier: true
+  typescript_strict: true
+  lighthouse_threshold: 90
+  test_coverage: 0.85
+
+locks:
+  agents_path: packages/agents
+  cross_repo_allowed: [repo, keykey]
+  wander_watchlist: [claude]

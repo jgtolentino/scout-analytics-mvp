@@ -1,10 +1,10 @@
-# Scout Analytics MVP - Clean v2.1 Branch
+# Scout Analytics v3.3 - Clean v2.0 Baseline
 
-A production-ready analytics dashboard built on a clean v2.1 baseline with cherry-picked MVP dashboard components.
+A production-ready analytics dashboard targeting v3.3.0 features built on a clean v2.0 baseline with hash-locked agents and hardened CI/CD.
 
 ## 🎯 Overview
 
-This repository represents a safe, no-nonsense approach to integrating the Scout Analytics MVP dashboard into a clean v2.1 branch without re-introducing v3.x complexity. The implementation follows the exact sequence outlined in the deployment guide to ensure stability and maintainability.
+This repository implements Scout Analytics v3.3 specification with dual-DB analytics, AI insights, and CES chat features. Built on a clean v2.0 baseline (last stable before 3.x experiments) to avoid complexity while delivering advanced functionality including BrandBot AI panel, real-time filters, and 10-stage CI/CD pipeline.
 
 ## 🚀 Quick Start
 
@@ -23,19 +23,28 @@ npm run build
 
 ```
 scout-analytics-mvp/
+├── docs/
+│   └── end_state_v3.3.yaml           # v3.3 specification
+├── packages/
+│   └── agents/                        # Hash-locked agents
+│       ├── repo/                      # Cross-repo operations
+│       ├── keykey/                    # API key management
+│       ├── basher/                    # Bash script execution
+│       ├── caca/                      # QA and testing
+│       └── claude/                    # AI development assistance
+├── scripts/
+│   ├── lock-agent.sh                  # Agent hash locking
+│   └── performance-test.cjs           # Performance testing
 ├── src/
 │   ├── components/
 │   │   └── filters/
-│   │       └── GlobalFilterBar.tsx    # Main filter component
+│   │       └── GlobalFilterBar.tsx    # Advanced filtering interface
 │   ├── state/
-│   │   └── useFilterStore.ts          # Filter state management
-│   ├── App.tsx                        # Main application component
+│   │   └── useFilterStore.ts          # Zustand state management
+│   ├── App.tsx                        # Main application
 │   ├── main.tsx                       # React entry point
-│   └── index.css                      # Global styles with Tailwind
-├── dist/                              # Built assets
-├── performance-results/               # Performance test results
-├── scripts/
-│   └── performance-test.cjs           # Performance testing script
+│   └── index.css                      # Tailwind CSS styles
+├── .pulserrc                          # Agent hash locks
 ├── index.html                         # HTML entry point
 ├── vite.config.ts                     # Vite configuration
 ├── tsconfig.json                      # TypeScript configuration
@@ -44,22 +53,36 @@ scout-analytics-mvp/
 
 ## 🔧 Features
 
-### Dashboard Components
-- **GlobalFilterBar**: Advanced filtering interface with:
-  - Search functionality
-  - Date range picker with persistence
-  - Location, category, brand, and store filters
-  - Quick filter buttons (Top Performers, New Products, Trending)
-  - Clear all functionality
-  - Real-time filter state management
+### v3.3 Dashboard Pages
+- **Overview** (`/`) - KPI cards, trend lines, category performance, AI insight panel
+- **Trends** (`/trends`) - Temporal patterns, peak hour charts, region breakdown
+- **Product Mix** (`/products`) - Brand charts, SKU tables, sankey flow diagrams
+- **Consumers** (`/consumers`) - Demographics heatmap, repeat rate cards
+- **CES Chat** (`/ces`) - AI-powered chat panel for creative analysis
+
+### AI Services
+- **BrandBot** - GPT-4o powered insights via `/api/brandbot`
+- **CES Chat** - OpenAI streaming chat via `/api/ces/chat`
+
+### Dual Database Support
+- **Supabase** (Primary) - PostgreSQL for real-time analytics
+- **Azure SQL** (Replica) - SQL Server for enterprise data
+
+### Hash-Locked Agents
+- **RepoAgent** - Cross-repository operations and git management
+- **KeyKeyAgent** - API key and secret management
+- **BasherAgent** - Secure bash script execution
+- **CacaAgent** - QA automation with 85% coverage threshold
+- **ClaudeAgent** - AI development assistance with CWD lock
 
 ### Technical Stack
-- **React 18** with TypeScript
+- **React 18** with TypeScript strict mode
 - **Vite** for fast development and building
-- **Tailwind CSS** for styling
+- **Tailwind CSS** for utility-first styling
 - **Zustand** for state management
 - **Lucide React** for icons
-- **Date handling** with proper serialization
+- **ESLint + Prettier** for code quality
+- **Lighthouse ≥90** performance threshold
 
 ## 🛠️ Development
 
