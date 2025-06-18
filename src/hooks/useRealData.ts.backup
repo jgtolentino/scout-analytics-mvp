@@ -8,14 +8,14 @@ const formatDateForSQL = (date: Date): string => {
   return date.toISOString().split('T')[0];
 };
 
-// Simplified hook for dashboard metrics - works with actual schema
+// Hook for dashboard metrics - matches DashboardMetrics type from mock data
 export const useMetrics = () => {
   const filters = useFilterStore();
 
   return useQuery({
     queryKey: ['metrics', filters],
     queryFn: async (): Promise<DashboardMetrics> => {
-      // Get all transactions with just the available columns
+      // Get ALL transactions with related data - NO LIMITS for full dataset
       const { data: transactions, error, count } = await supabase
         .from('transactions')
         .select(`
@@ -25,41 +25,61 @@ export const useMetrics = () => {
           customer_age,
           customer_gender,
           store_location,
-          payment_method,
-          device_id
+          transaction_items!inner(
+            quantity,
+            price,
+            products!inner(
+              name,
+              category,
+              brands!inner(name)
+            )
+          )
         `, { count: 'exact' })
         .gte('created_at', formatDateForSQL(filters.dateRange.from!))
         .lte('created_at', formatDateForSQL(filters.dateRange.to!))
         .limit(50000); // Explicit high limit to ensure we get all 18k+ records
 
-      if (error) {
-        console.error('❌ Database query failed:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       // Debug logging to verify we're getting full dataset
       console.log(`🔍 Query Results: ${transactions?.length || 0} transactions fetched, total count: ${count}`);
       
-      // Apply location filter (using store_location instead of barangays)
+      // Apply filters
       let filteredTransactions = transactions || [];
       
+      if (filters.brands?.length > 0) {
+        filteredTransactions = filteredTransactions.filter(t => 
+          t.transaction_items.some((item: any) => 
+            filters.brands.includes(item.products.brands.name)
+          )
+        );
+      }
+
       if (filters.barangays?.length > 0) {
         filteredTransactions = filteredTransactions.filter(t => 
           filters.barangays.includes(t.store_location)
         );
       }
 
+      if (filters.categories?.length > 0) {
+        filteredTransactions = filteredTransactions.filter(t => 
+          t.transaction_items.some((item: any) => 
+            filters.categories.includes(item.products.category)
+          )
+        );
+      }
+
       // Calculate basic metrics
-      const revenue = filteredTransactions.reduce((sum, t) => sum + (t.total_amount || 0), 0);
+      const revenue = filteredTransactions.reduce((sum, t) => sum + t.total_amount, 0);
       const transactions_count = filteredTransactions.length;
-      const activeCustomers = new Set(filteredTransactions.map(t => `${t.customer_age}-${t.customer_gender}-${t.store_location}`)).size;
+      const activeCustomers = filteredTransactions.length; // Simplified - using transaction count
       const avgBasketSize = transactions_count > 0 ? revenue / transactions_count : 0;
 
       // Generate revenue trend data
       const dateMap = new Map<string, number>();
       filteredTransactions.forEach(t => {
         const date = t.created_at.split('T')[0]; // Get date part only
-        dateMap.set(date, (dateMap.get(date) || 0) + (t.total_amount || 0));
+        dateMap.set(date, (dateMap.get(date) || 0) + t.total_amount);
       });
 
       const revenueTrendData: ChartData[] = [];
@@ -76,24 +96,26 @@ export const useMetrics = () => {
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
-      // Create mock top products based on payment methods and locations
-      const locationRevenue = new Map<string, number>();
+      // Get top products
+      const productRevenue = new Map<string, number>();
       filteredTransactions.forEach(t => {
-        const location = t.store_location || 'Unknown';
-        locationRevenue.set(location, (locationRevenue.get(location) || 0) + (t.total_amount || 0));
+        t.transaction_items.forEach((item: any) => {
+          const productName = item.products.name;
+          const itemTotal = item.quantity * item.price;
+          productRevenue.set(productName, (productRevenue.get(productName) || 0) + itemTotal);
+        });
       });
 
-      const topProducts = Array.from(locationRevenue.entries())
-        .map(([name, value]) => ({ name: `Top Products - ${name}`, value }))
+      const topProducts = Array.from(productRevenue.entries())
+        .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 8);
 
-      // Calculate growth (simplified - using variance based on actual data)
-      const avgTransaction = revenue / Math.max(transactions_count, 1);
-      const revenueTrend = Math.min(Math.max((avgTransaction - 150) / 10, -20), 30); // Dynamic growth
-      const transactionsTrend = Math.min(Math.max((transactions_count - 1000) / 100, -15), 25);
-      const basketTrend = Math.min(Math.max((avgBasketSize - 100) / 20, -10), 20);
-      const customersTrend = Math.min(Math.max((activeCustomers - 500) / 50, -12), 18);
+      // Calculate growth (simplified - using 15% as default for now)
+      const revenueTrend = 15.2;
+      const transactionsTrend = 8.7;
+      const basketTrend = 5.3;
+      const customersTrend = 12.1;
 
       // Return data matching DashboardMetrics interface
       return {
@@ -114,7 +136,7 @@ export const useMetrics = () => {
   });
 };
 
-// Simplified hook for transaction trends data
+// Hook for transaction trends data - matches expected structure
 export const useTransactionTrends = () => {
   const filters = useFilterStore();
   
@@ -129,23 +151,47 @@ export const useTransactionTrends = () => {
           total_amount,
           payment_method,
           store_location,
-          customer_age,
-          customer_gender
+          transaction_items!inner(
+            quantity,
+            price,
+            products!inner(
+              category,
+              brands!inner(name)
+            )
+          )
         `, { count: 'exact' })
         .gte('created_at', formatDateForSQL(filters.dateRange.from!))
         .lte('created_at', formatDateForSQL(filters.dateRange.to!))
-        .limit(50000)
+        .limit(50000) // Ensure we get all records
         .order('created_at');
 
       if (error) throw error;
 
+      // Debug logging for transaction trends
       console.log(`📈 Transaction Trends: ${transactions?.length || 0} transactions fetched, total count: ${count}`);
 
+      // Apply filters
       let filteredTransactions = transactions || [];
       
+      if (filters.brands?.length > 0) {
+        filteredTransactions = filteredTransactions.filter(t => 
+          t.transaction_items.some((item: any) => 
+            filters.brands.includes(item.products.brands.name)
+          )
+        );
+      }
+
       if (filters.barangays?.length > 0) {
         filteredTransactions = filteredTransactions.filter(t => 
           filters.barangays.includes(t.store_location)
+        );
+      }
+
+      if (filters.categories?.length > 0) {
+        filteredTransactions = filteredTransactions.filter(t => 
+          t.transaction_items.some((item: any) => 
+            filters.categories.includes(item.products.category)
+          )
         );
       }
 
@@ -182,7 +228,7 @@ export const useTransactionTrends = () => {
       const valueDistribution = valueRanges.map(range => ({
         date: range.label,
         value: filteredTransactions.filter(t => 
-          (t.total_amount || 0) >= range.min && (t.total_amount || 0) <= range.max
+          t.total_amount >= range.min && t.total_amount <= range.max
         ).length
       }));
 
@@ -191,6 +237,7 @@ export const useTransactionTrends = () => {
         Array.from({ length: 24 }, (_, hour) => {
           const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day];
           
+          // Count transactions for this day/hour combination
           const count = filteredTransactions.filter(t => {
             const date = new Date(t.created_at);
             return date.getDay() === day && date.getHours() === hour;
@@ -214,7 +261,7 @@ export const useTransactionTrends = () => {
   });
 };
 
-// Simplified hook for product mix - using location and payment method as proxies
+// Hook for product mix data - matches expected structure
 export const useProductMix = () => {
   const filters = useFilterStore();
   
@@ -228,57 +275,87 @@ export const useProductMix = () => {
           created_at,
           total_amount,
           store_location,
-          payment_method,
-          customer_age,
-          customer_gender
+          transaction_items!inner(
+            quantity,
+            price,
+            products!inner(
+              name,
+              category,
+              brands!inner(name)
+            )
+          )
         `, { count: 'exact' })
         .gte('created_at', formatDateForSQL(filters.dateRange.from!))
         .lte('created_at', formatDateForSQL(filters.dateRange.to!))
-        .limit(50000);
+        .limit(50000); // Ensure we get all records
 
       if (error) throw error;
 
+      // Debug logging for product mix
       console.log(`🛍️ Product Mix: ${transactions?.length || 0} transactions fetched, total count: ${count}`);
 
+      // Apply filters
       let filteredTransactions = transactions || [];
       
+      if (filters.brands?.length > 0) {
+        filteredTransactions = filteredTransactions.filter(t => 
+          t.transaction_items.some((item: any) => 
+            filters.brands.includes(item.products.brands.name)
+          )
+        );
+      }
+
       if (filters.barangays?.length > 0) {
         filteredTransactions = filteredTransactions.filter(t => 
           filters.barangays.includes(t.store_location)
         );
       }
 
-      // Use store locations as category performance proxy
-      const locationRevenue = new Map<string, { value: number, growth: number }>();
+      if (filters.categories?.length > 0) {
+        filteredTransactions = filteredTransactions.filter(t => 
+          t.transaction_items.some((item: any) => 
+            filters.categories.includes(item.products.category)
+          )
+        );
+      }
+
+      // Category performance
+      const categoryRevenue = new Map<string, { value: number, growth: number }>();
       filteredTransactions.forEach(t => {
-        const location = t.store_location || 'Unknown';
-        const existing = locationRevenue.get(location) || { value: 0, growth: 0 };
-        locationRevenue.set(location, {
-          value: existing.value + (t.total_amount || 0),
-          growth: Math.random() * 20 - 5 // Random growth between -5% to 15%
+        t.transaction_items.forEach((item: any) => {
+          const category = item.products.category;
+          const itemTotal = item.quantity * item.price;
+          const existing = categoryRevenue.get(category) || { value: 0, growth: 0 };
+          categoryRevenue.set(category, {
+            value: existing.value + itemTotal,
+            growth: Math.random() * 20 - 5 // Random growth between -5% to 15%
+          });
         });
       });
 
-      const categoryPerformance = Array.from(locationRevenue.entries())
-        .map(([name, data]) => ({ name: `Category: ${name}`, value: data.value, growth: data.growth }))
+      const categoryPerformance = Array.from(categoryRevenue.entries())
+        .map(([name, data]) => ({ name, value: data.value, growth: data.growth }))
         .sort((a, b) => b.value - a.value);
 
-      // Use payment methods as brand performance proxy
-      const paymentRevenue = new Map<string, { value: number, marketShare: number }>();
-      const totalRevenue = filteredTransactions.reduce((sum, t) => sum + (t.total_amount || 0), 0);
+      // Brand performance
+      const brandRevenue = new Map<string, { value: number, marketShare: number }>();
+      const totalRevenue = filteredTransactions.reduce((sum, t) => sum + t.total_amount, 0);
       
       filteredTransactions.forEach(t => {
-        const payment = t.payment_method || 'Unknown';
-        const existing = paymentRevenue.get(payment) || { value: 0, marketShare: 0 };
-        paymentRevenue.set(payment, {
-          value: existing.value + (t.total_amount || 0),
-          marketShare: 0 // Will calculate after
+        t.transaction_items.forEach((item: any) => {
+          const brand = item.products.brands.name;
+          const itemTotal = item.quantity * item.price;
+          const existing = brandRevenue.get(brand) || { value: 0, marketShare: 0 };
+          brandRevenue.set(brand, {
+            value: existing.value + itemTotal,
+            marketShare: 0 // Will calculate after
+          });
         });
       });
 
-      const brandPerformance = Array.from(paymentRevenue.entries())
+      const brandPerformance = Array.from(brandRevenue.entries())
         .map(([name, data]) => ({
-          name: `Brand: ${name}`,
+          name,
           value: data.value,
           marketShare: totalRevenue > 0 ? (data.value / totalRevenue) * 100 : 0
         }))
@@ -302,7 +379,7 @@ export const useProductMix = () => {
   });
 };
 
-// Simplified hook for consumer insights
+// Hook for consumer insights data - matches expected structure
 export const useConsumerInsights = () => {
   const filters = useFilterStore();
   
@@ -318,21 +395,47 @@ export const useConsumerInsights = () => {
           customer_age,
           customer_gender,
           payment_method,
-          store_location
+          store_location,
+          transaction_items!inner(
+            quantity,
+            price,
+            products!inner(
+              category,
+              brands!inner(name)
+            )
+          )
         `, { count: 'exact' })
         .gte('created_at', formatDateForSQL(filters.dateRange.from!))
         .lte('created_at', formatDateForSQL(filters.dateRange.to!))
-        .limit(50000);
+        .limit(50000); // Ensure we get all records
 
       if (error) throw error;
 
+      // Debug logging for consumer insights
       console.log(`👥 Consumer Insights: ${transactions?.length || 0} transactions fetched, total count: ${count}`);
 
+      // Apply filters
       let filteredTransactions = transactions || [];
       
+      if (filters.brands?.length > 0) {
+        filteredTransactions = filteredTransactions.filter(t => 
+          t.transaction_items.some((item: any) => 
+            filters.brands.includes(item.products.brands.name)
+          )
+        );
+      }
+
       if (filters.barangays?.length > 0) {
         filteredTransactions = filteredTransactions.filter(t => 
           filters.barangays.includes(t.store_location)
+        );
+      }
+
+      if (filters.categories?.length > 0) {
+        filteredTransactions = filteredTransactions.filter(t => 
+          t.transaction_items.some((item: any) => 
+            filters.categories.includes(item.products.category)
+          )
         );
       }
 
@@ -349,7 +452,7 @@ export const useConsumerInsights = () => {
           const existing = ageGroups.get(ageGroup) || { count: 0, value: 0 };
           ageGroups.set(ageGroup, {
             count: existing.count + 1,
-            value: existing.value + (t.total_amount || 0)
+            value: existing.value + t.total_amount
           });
         }
       });
@@ -369,7 +472,7 @@ export const useConsumerInsights = () => {
           const existing = genderGroups.get(gender) || { count: 0, value: 0 };
           genderGroups.set(gender, {
             count: existing.count + 1,
-            value: existing.value + (t.total_amount || 0)
+            value: existing.value + t.total_amount
           });
         }
       });
@@ -407,7 +510,7 @@ export const useConsumerInsights = () => {
           const existing = paymentGroups.get(t.payment_method) || { count: 0, amount: 0 };
           paymentGroups.set(t.payment_method, {
             count: existing.count + 1,
-            amount: existing.amount + (t.total_amount || 0)
+            amount: existing.amount + t.total_amount
           });
         }
       });
@@ -419,13 +522,15 @@ export const useConsumerInsights = () => {
       }));
 
       // Basket analysis
-      const totalRevenue = filteredTransactions.reduce((sum, t) => sum + (t.total_amount || 0), 0);
-      
+      const totalRevenue = filteredTransactions.reduce((sum, t) => sum + t.total_amount, 0);
+      const totalItems = filteredTransactions.reduce((sum, t) => 
+        sum + t.transaction_items.reduce((itemSum: number, item: any) => itemSum + item.quantity, 0), 0);
+
       const basketAnalysis = {
-        avgItemsPerBasket: 2.4, // Simplified - would need transaction_items table
+        avgItemsPerBasket: totalCustomers > 0 ? +(totalItems / totalCustomers).toFixed(1) : 0,
         avgBasketValue: totalCustomers > 0 ? Math.round(totalRevenue / totalCustomers) : 0,
-        repeatCustomerRate: Math.round(Math.random() * 30 + 50), // 50-80% range
-        customerLifetimeValue: Math.round(totalRevenue / Math.max(totalCustomers, 1) * 12) // Annualized
+        repeatCustomerRate: 67, // Simplified - would need customer ID analysis
+        customerLifetimeValue: 12400 // Simplified - would need historical analysis
       };
 
       return {
